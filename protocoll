@@ -14,5 +14,4 @@ Mean and Varianz
 4. Cleaned a little:
 4–5 files had missing vp values, which I filled in manually.
 Some column names had leading spaces, so I read the CSVs with skipinitialspace=True.
-
-
+Removed practice trials
