@@ -15,3 +15,8 @@ Mean and Varianz
 4–5 files had missing vp values, which I filled in manually.
 Some column names had leading spaces, so I read the CSVs with skipinitialspace=True.
 Removed practice trials
+
+5. Participants understood the buttons differently..
+
+Team pass = 1: 4,16,17,18,19,20,21
+Team pass = 2: 1,2,3,5,6,7,8,9,10,11,12,13,14,15

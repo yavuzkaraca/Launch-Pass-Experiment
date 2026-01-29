@@ -27,6 +27,49 @@ def remove_vp(df, vp_id):
     return df[df["vp"] != vp_id].copy()
 
 
+# Some participants understood the buttons differently
+_TEAM_PASS_EQUALS_1 = [4, 16, 17, 18, 19, 20, 21]
+_TEAM_PASS_EQUALS_2 = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+
+def fix_response_coding(df):
+    mask = df["vp"].isin(_TEAM_PASS_EQUALS_2) & df["response"].isin([1, 2])
+    df.loc[mask, "response"] = df.loc[mask, "response"].map({1: 2, 2: 1})
+    return df
+
+
+def launch_percent_overall(df):
+    """
+    Computes overall Launch percentage (response == 2),
+    averaged across participants (mean ± std).
+    """
+
+    # per-participant totals
+    totals = (
+        df.groupby("vp")
+        .size()
+        .reset_index(name="n_total")
+    )
+
+    # per-participant launch counts
+    launches = (
+        df[df["response"] == 2]
+        .groupby("vp")
+        .size()
+        .reset_index(name="n_launch")
+    )
+
+    per_vp = totals.merge(launches, on="vp", how="left")
+    per_vp["n_launch"] = per_vp["n_launch"].fillna(0)
+
+    per_vp["launch_percent"] = per_vp["n_launch"] / per_vp["n_total"] * 100
+
+    table = per_vp["launch_percent"].agg(["mean", "std"]).to_frame().T
+    table.columns = ["Launch_mean", "Launch_std"]
+
+    return table
+
+
 def overview_response_percent_table(df):
     counts = (
         df
@@ -48,48 +91,43 @@ def overview_response_percent_table(df):
             columns="response",
             values="percent"
         )
-        .rename(columns={1: "Launch_%", 2: "Pass_%"})
+        .rename(columns={1: "Pass_%", 2: "Launch_%"})
     )
 
     return table
 
 
-def response_percent_by_factor(df, factor):
-    per_vp = (
-        df
-        .groupby(["vp", factor, "response"])
+def launch_percent_by_factor(df, factor):
+    """
+    Mean ± std of Launch response percentage (response == 2)
+    per level of `factor`, computed per participant first.
+    """
+
+    # per-vp counts (all responses)
+    totals = (
+        df.groupby(["vp", factor])
         .size()
-        .reset_index(name="n")
+        .reset_index(name="n_total")
     )
 
-    per_vp["percent"] = (
-        per_vp["n"]
-        / per_vp.groupby(["vp", factor])["n"].transform("sum")
-        * 100
+    # per-vp counts (launch only)
+    launches = (
+        df[df["response"] == 2]
+        .groupby(["vp", factor])
+        .size()
+        .reset_index(name="n_launch")
     )
 
-    # aggregate across participants
-    summary = (
-        per_vp
-        .groupby([factor, "response"])["percent"]
-        .agg(["mean", "std"])
-        .reset_index()
-    )
+    per_vp = totals.merge(launches, on=["vp", factor], how="left")
+    per_vp["n_launch"] = per_vp["n_launch"].fillna(0)
+
+    per_vp["launch_percent"] = per_vp["n_launch"] / per_vp["n_total"] * 100
 
     table = (
-        summary
-        .pivot_table(
-            index=factor,
-            columns="response",
-            values=["mean", "std"]
-        )
+        per_vp
+        .groupby(factor)["launch_percent"]
+        .agg(["mean", "std"])
+        .rename(columns={"mean": "Launch_mean", "std": "Launch_std"})
     )
 
-    # nicer column names
-    table.columns = [
-        f"{'Pass' if r == 1 else 'Launch'}_{stat}"
-        for stat, r in table.columns
-    ]
-
     return table
-
