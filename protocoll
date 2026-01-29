@@ -1,0 +1,18 @@
+
+Spalten Auswählen die uns intressieren
+Mean and Varianz for each participant each feature
+Mean and Varianz over all participants for each feature
+Mean and Varianz
+
+
+1. Downloaded
+
+2. Read the files
+
+3. Merged dataframes
+
+4. Cleaned a little:
+4–5 files had missing vp values, which I filled in manually.
+Some column names had leading spaces, so I read the CSVs with skipinitialspace=True.
+
+
