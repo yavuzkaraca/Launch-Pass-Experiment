@@ -19,6 +19,10 @@ def remove_invalid_responses(df):
     return df[df["response"].isin([1, 2])].copy()
 
 
+def remove_slow_reactions(df, max_rt_ms=6000):
+    return df[df["RT"] <= max_rt_ms].copy()
+
+
 def get_slowest_reactions(df):
     return df.sort_values("RT", ascending=False).head(20)
 
