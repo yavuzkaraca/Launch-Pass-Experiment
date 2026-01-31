@@ -19,12 +19,29 @@ def remove_invalid_responses(df):
     return df[df["response"].isin([1, 2])].copy()
 
 
+def get_slowest_reactions(df):
+    return df.sort_values("RT", ascending=False).head(20)
+
+
+def remove_zero_reactions(df):
+    return df[df["RT"] > 0].copy()
+
+
+def get_reaction_mean_std(df):
+    per_vp = (
+        df.groupby("vp")["RT"]
+        .mean()
+    )
+
+    return {
+        "RT_mean": per_vp.mean(),
+        "RT_std": per_vp.std()
+    }
+
+
 def remove_slow_reactions(df, max_rt_ms=6000):
     return df[df["RT"] <= max_rt_ms].copy()
 
-
-def get_slowest_reactions(df):
-    return df.sort_values("RT", ascending=False).head(20)
 
 
 def remove_vp(df, vp_id):
